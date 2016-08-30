@@ -27,30 +27,25 @@ var ISO6391 = require('iso-639-1');
 
 // [START detect_language]
 /**
- * Detect the language of the provided text.
+ * Detect the language of the provided text or texts.
  *
- * @param {string} text The text for which to detect the language.
+ * @param {string|string[]} input The text or texts for which to detect the language.
  * @param {string} apiKey Your Translate API key.
  * @param {function} cb The callback function.
  */
-function detectLanguage (text, apiKey, callback) {
+function detectLanguage (input, apiKey, callback) {
   // Instantiate a translate client
   var translate = Translate({
     key: apiKey
   });
 
   // See https://googlecloudplatform.github.io/gcloud-node/#/docs/translate/latest/translate
-  translate.detect(text, function (err, result) {
+  translate.detect(input, function (err, result) {
     if (err) {
       return callback(err);
     }
 
-    console.log(
-      'Detected %s (%s) with confidence %d',
-      ISO6391.getName(result.language),
-      result.language,
-      result.confidence
-    );
+    console.log('Detected language:', result);
     return callback(null, result);
   });
 }
@@ -58,7 +53,7 @@ function detectLanguage (text, apiKey, callback) {
 
 // [START list_languages]
 /**
- * List all of the authenticated project's buckets.
+ * Get a list of support languages.
  *
  * @param {string} apiKey Your Translate API key.
  * @param {function} cb The callback function.
@@ -81,12 +76,37 @@ function listLanguages (apiKey, callback) {
 }
 // [END list_languages]
 
+// [START list_languages_target]
+/**
+ * Get a list of supported language with language names in a target language.
+ *
+ * @param {string} apiKey Your Translate API key.
+ * @param {function} cb The callback function.
+ */
+function listLanguageNames (target, apiKey, callback) {
+  // Instantiate a translate client
+  var translate = Translate({
+    key: apiKey
+  });
+
+  // See https://googlecloudplatform.github.io/gcloud-node/#/docs/translate/latest/translate
+  translate.getLanguages(target, function (err, languages) {
+    if (err) {
+      return callback(err);
+    }
+
+    console.log('Found %d language(s)!', languages.length);
+    return callback(null, languages);
+  });
+}
+// [END list_languages_target]
+
 // [START translate_text]
 /**
- * Translate the provided text.
+ * Translate the provided text or texts.
  *
  * @param {object} options Configuration options.
- * @param {string} options.text The text to translate.
+ * @param {string} options.input The text or texts to translate.
  * @param {string} options.from The language of the source text.
  * @param {string} options.to The language to which to translate the text.
  * @param {string} options.apiKey Your Translate API key.
@@ -104,7 +124,7 @@ function translateText (options, callback) {
   };
 
   // See https://googlecloudplatform.github.io/gcloud-node/#/docs/translate/latest/translate
-  translate.translate(options.text, config, function (err, translation) {
+  translate.translate(options.input, config, function (err, translation) {
     if (err) {
       return callback(err);
     }
@@ -123,6 +143,7 @@ var utils = require('../utils');
 var program = module.exports = {
   detectLanguage: detectLanguage,
   listLanguages: listLanguages,
+  listLanguageNames: listLanguageNames,
   translateText: translateText,
   main: function (args) {
     // Run the command-line program
@@ -132,13 +153,17 @@ var program = module.exports = {
 
 cli
   .demand(1)
-  .command('detect <text>', 'Detect the language of the provided text', {}, function (options) {
-    program.detectLanguage(options.text, options.apiKey, utils.makeHandler(false));
+  .command('detect <input..>', 'Detect the language of the provided text', {}, function (options) {
+    program.detectLanguage(options.input, options.apiKey, utils.makeHandler(false));
   })
-  .command('list', 'List available translation languages.', {}, function (options) {
-    program.listLanguages(options.apiKey, utils.makeHandler());
+  .command('list [target]', 'List available translation languages.', {}, function (options) {
+    if (options.target) {
+      program.listLanguageNames(options.target, options.apiKey, utils.makeHandler());
+    } else {
+      program.listLanguages(options.apiKey, utils.makeHandler());
+    }
   })
-  .command('translate <text>', 'Translate the provided text to the target language.', {
+  .command('translate <input..>', 'Translate the provided text to the target language.', {
     to: {
       alias: 't',
       demand: true,
@@ -153,7 +178,7 @@ cli
       description: 'The language of the source text.'
     }
   }, function (options) {
-    program.translateText(utils.pick(options, ['text', 'to', 'from', 'apiKey']), utils.makeHandler());
+    program.translateText(utils.pick(options, ['input', 'to', 'from', 'apiKey']), utils.makeHandler());
   })
   .option('apiKey', {
     alias: 'k',
@@ -165,9 +190,10 @@ cli
   })
   .example('node $0 detect -k your-key "Hello world!"', 'Detect the language of "Hello world!".')
   .example('node $0 list -k your-key', 'List available translation languages.')
+  .example('node $0 list es -k your-key', 'List available translation languages with names in Spanish.')
   .example('node $0 translate -k your-key --to ru "Good morning!"', 'Translate "Good morning!" to Russian, auto-detecting English.')
   .example('node $0 translate -k your-key --to ru --from en "Good morning!"', 'Translate "Good morning!" to Russian from English.')
-  .wrap(100)
+  .wrap(120)
   .recommendCommands()
   .epilogue('For more information, see https://cloud.google.com/translate/docs');
 

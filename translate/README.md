@@ -33,22 +33,24 @@ __Usage:__ `node translate --help`
 
 ```
 Commands:
-  detect <text>     Detect the language of the provided text
-  list              List available translation languages.
-  translate <text>  Translate the provided text to the target language.
+  detect <input..>     Detect the language of the provided text
+  list [target]        List available translation languages.
+  translate <input..>  Translate the provided text to the target language.
 
 Options:
-  --apiKey, -k  Your Translate API key. Defaults to the value of the TRANSLATE_API_KEY environment
-                variable.                                                                   [string]
-  --help        Show help                                                                  [boolean]
+  --apiKey, -k  Your Translate API key. Defaults to the value of the TRANSLATE_API_KEY environment variable.
+                                                           [string] [default: "AIzaSyCxFhP0edrbIJs41_TeMSHH3V2dzWeC_NY"]
+  --help        Show help                                                                                      [boolean]
 
 Examples:
-  node translate detect -k your-key "Hello world!"    Detect the language of "Hello world!".
-  node translate list -k your-key                     List available translation languages.
-  node translate translate -k your-key --to ru "Good  Translate "Good morning!" to Russian,
-  morning!"                                           auto-detecting English.
-  node translate translate -k your-key --to ru        Translate "Good morning!" to Russian from
-  --from en "Good morning!"                           English.
+  node translate detect -k your-key "Hello world!"              Detect the language of "Hello world!".
+  node translate list -k your-key                               List available translation languages.
+  node translate list es -k your-key                            List available translation languages with names in
+                                                                Spanish.
+  node translate translate -k your-key --to ru "Good morning!"  Translate "Good morning!" to Russian, auto-detecting
+                                                                English.
+  node translate translate -k your-key --to ru --from en "Good  Translate "Good morning!" to Russian from English.
+  morning!"
 
 For more information, see https://cloud.google.com/translate/docs
 ```

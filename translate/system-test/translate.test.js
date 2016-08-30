@@ -28,7 +28,7 @@ describe('translate:translate', function () {
         assert.ifError(err);
         assert(result, 'should have received a result');
         assert.equal(result.language, 'en', 'should have detected english');
-        assert(console.log.calledWith('Detected %s (%s) with confidence %d', 'English', 'en', result.confidence));
+        assert(console.log.calledWith('Detected language:', result));
         done();
       });
     });
@@ -46,10 +46,22 @@ describe('translate:translate', function () {
     });
   });
 
+  describe('listLanguageNames', function () {
+    it('should list languages with names in target language', function (done) {
+      program.listLanguageNames('es', apiKey, function (err, languages) {
+        assert.ifError(err);
+        assert(Array.isArray(languages));
+        assert(languages.length > 0);
+        assert(console.log.calledWith('Found %d language(s)!', languages.length));
+        done();
+      });
+    });
+  });
+
   describe('translateText', function () {
     it('should translate text', function (done) {
       var options = {
-        text: text,
+        input: text,
         apiKey: apiKey,
         to: 'ru'
       };
